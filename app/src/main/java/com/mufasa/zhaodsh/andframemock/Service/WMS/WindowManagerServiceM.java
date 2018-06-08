@@ -1,17 +1,21 @@
 package com.mufasa.zhaodsh.andframemock.Service.WMS;
 
+import com.mufasa.zhaodsh.andframemock.App.IWindowSeesionM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.ActivityRecordM;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class WindowManagerServiceM {
+public class WindowManagerServiceM  extends IWindowManagerServiceM{
 
 
     private HashMap<ActivityRecordM.IApplicationToken, AppWindowToken> mTokenMap = new HashMap<>();
 
     private ArrayList<WindowStateM> mWindows = new ArrayList<WindowStateM>();
 
+    public WindowManagerServiceM() {
+
+    }
 
     public void addAppToken(ActivityRecordM.Token appToken) {
         AppWindowToken wtoken = new AppWindowToken();
@@ -23,5 +27,10 @@ public class WindowManagerServiceM {
         AppWindowToken  windowToken = mTokenMap.get(appToken);
         WindowStateM windowState = new WindowStateM(client, windowToken);
         mWindows.add(windowState);
+    }
+
+    @Override
+    public IWindowSeesionM openSession() {
+        return null;
     }
 }
