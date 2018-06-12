@@ -1,5 +1,6 @@
 package com.mufasa.zhaodsh.andframemock.App;
 
+import com.mufasa.zhaodsh.andframemock.Service.AMS.ActivityRecordM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.IActivityManagerServiceM;
 import com.mufasa.zhaodsh.andframemock.Service.IBinderM;
 import com.mufasa.zhaodsh.andframemock.Service.ServiceManager;
@@ -33,17 +34,27 @@ public class ActivityThreadM {
             mActivities.put(binder, r);
             handleLaunchActivity(r);
         }
+
+        @Override
+        public void schedulePauseActivity(IBinderM binder) {
+            ActivityClientRecordM r = mActivities.get(binder);
+            r.activty.onPause();
+        }
     }
 
 
     public void attach(){
         IActivityManagerServiceM mgr = (IActivityManagerServiceM)ServiceManager.getService("ActivityManagerService");
-        mgr.attachApplication(mAppThread);
+        mgr.attachApplication(mAppThread, getProcessID());
     }
 
 
     public void handleLaunchActivity(ActivityClientRecordM r){
-        r.activty.onCreate();
+
+        ActivityM  a = new ActivityM();
+        r.activty = a;
+        a.attach(r.token);
+        a.onCreate();
         handleResumeActivity(r.token);
     }
 
@@ -58,6 +69,8 @@ public class ActivityThreadM {
     }
 
 
-
+    public static final int getProcessID() {
+        return  2;
+    }
 
 }

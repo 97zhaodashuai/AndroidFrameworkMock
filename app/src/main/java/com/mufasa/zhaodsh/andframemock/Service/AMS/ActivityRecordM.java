@@ -7,6 +7,8 @@ public class ActivityRecordM {
 
     public Token appToken;
 
+    public ProcessRecordM app;
+
     public ActivityRecordM() {
         appToken  = new Token(this);
     }
