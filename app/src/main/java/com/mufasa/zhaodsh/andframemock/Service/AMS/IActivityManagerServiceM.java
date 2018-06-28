@@ -10,5 +10,17 @@ public abstract  class IActivityManagerServiceM extends IBinderM {
 
     public abstract void startActivity(IBinderM resultTo, IntentM intent);
 
+    public abstract void startService(IApplicationThreadM applicationThreadM, IntentM intent);
+
+    public abstract void bindService(IApplicationThreadM applicationThreadM, IntentM intent, IServiceConnectionM connectionM);
+
+    public abstract void publicService(IBinderM token,IBinderM binder);
+
+    public abstract  void serviceDoneExecuting( IBinderM binder);
+
+    public abstract  void registerReceiver(IApplicationThreadM applicationThreadM, IBinderM receiver, String action);
+
+
+    public abstract void broadcastIntent(IApplicationThreadM applicationThreadM, String action);
 
 }

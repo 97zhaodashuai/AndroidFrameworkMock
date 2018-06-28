@@ -1,7 +1,9 @@
 package com.mufasa.zhaodsh.andframemock.App;
 
+import com.mufasa.zhaodsh.andframemock.IntentM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.ActivityRecordM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.IActivityManagerServiceM;
+import com.mufasa.zhaodsh.andframemock.Service.AMS.ServiceRecordM;
 import com.mufasa.zhaodsh.andframemock.Service.IBinderM;
 import com.mufasa.zhaodsh.andframemock.Service.ServiceManager;
 
@@ -12,12 +14,12 @@ import java.util.List;
 public class ActivityThreadM {
 
     public HashMap<IBinderM, ActivityClientRecordM>  mActivities = new HashMap<IBinderM, ActivityClientRecordM>();
+    public HashMap<IBinderM, ServiceM> mServices = new HashMap<>();
+    public HashMap<IBinderM, ReceiverDispatcher> mReceivers = new HashMap<>();
 
     private List<ViewRootImplM> mViewRoots = new ArrayList<>();
 
     public IApplicationThreadM mAppThread = new ApplicationThread();
-
-
 
     public static void main(String[] args){
         ActivityThreadM thread = new ActivityThreadM();
@@ -39,6 +41,35 @@ public class ActivityThreadM {
         public void schedulePauseActivity(IBinderM binder) {
             ActivityClientRecordM r = mActivities.get(binder);
             r.activty.onPause();
+        }
+
+        @Override
+        public void scheduleCreateService(IBinderM token) {
+            ServiceM service = new ServiceM();
+            service.attach();
+            service.onCreate();
+            mServices.put(token, service);
+            getActivityManager().serviceDoneExecuting(token);
+        }
+
+        @Override
+        public void scheduleBindService(IBinderM token) {
+            ServiceM service = new ServiceM();
+            service.attach();
+            service.onCreate();
+            mServices.put(token, service);
+
+            IBinderM binder = service.onBind();
+
+            getActivityManager().publicService(token, binder);
+
+            getActivityManager().serviceDoneExecuting(token);
+        }
+
+        @Override
+        public void scheduleRegisteredReceiver(IBinderM binder) {
+            ReceiverDispatcher dispatcher = mReceivers.get(binder);
+            dispatcher.performReceive();
         }
     }
 
@@ -72,5 +103,22 @@ public class ActivityThreadM {
     public static final int getProcessID() {
         return  2;
     }
+
+
+    public IActivityManagerServiceM  getActivityManager(){
+        return  (IActivityManagerServiceM)ServiceManager.getService("ActivityManagerService");
+    }
+
+
+
+    public void RegisterReceiver(BroadcastReceiverM  receiverM, String action){
+        ReceiverDispatcher dispatcher = new ReceiverDispatcher();
+        dispatcher.receiverM = receiverM;
+        dispatcher.action = action;
+        mReceivers.put(dispatcher, dispatcher);
+        getActivityManager().registerReceiver(mAppThread, dispatcher, action);
+
+    }
+
 
 }

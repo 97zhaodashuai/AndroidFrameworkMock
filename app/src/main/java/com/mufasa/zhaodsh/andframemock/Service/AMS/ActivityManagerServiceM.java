@@ -1,12 +1,19 @@
 package com.mufasa.zhaodsh.andframemock.Service.AMS;
 
+import android.content.Intent;
 import android.util.SparseArray;
 
 import com.mufasa.zhaodsh.andframemock.App.IApplicationThreadM;
 import com.mufasa.zhaodsh.andframemock.IntentM;
 import com.mufasa.zhaodsh.andframemock.Service.IBinderM;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 public class ActivityManagerServiceM extends IActivityManagerServiceM {
 
@@ -14,6 +21,11 @@ public class ActivityManagerServiceM extends IActivityManagerServiceM {
 
     SparseArray<ProcessRecordM>  mPidsSelfLocked = new SparseArray<ProcessRecordM>();
     HashMap<String, ProcessRecordM> mProcessMap = new HashMap<>();
+
+    HashMap<String, ServiceRecordM> mServices = new HashMap<>();
+    HashMap<IBinderM, ReceiverListM> mRegisteredReceivers = new HashMap<>();
+    IdentityHashMap<String, List<BroadcastFilterM>> mReceiverResolver = new IdentityHashMap<>();
+    List<BroadcastFilterM> mParallelBroadcasts = new ArrayList<>();
     public ActivityManagerServiceM() {
         mMainStack = new ActivityStackM();
     }
@@ -30,8 +42,96 @@ public class ActivityManagerServiceM extends IActivityManagerServiceM {
     }
     @Override
     public void startActivity( IBinderM resultTo, IntentM intent) {
+        mMainStack.startActivity(resultTo, intent);
+    }
+
+    @Override
+    public void startService(IApplicationThreadM applicationThreadM, IntentM intent){
+
+        ServiceRecordM r = new ServiceRecordM();
+        String servName = getComponentName(intent);
+        mServices.put(servName, r);
+
+        String processName = "";
+
+        ProcessRecordM  pre = mProcessMap.get(processName);
+        if(pre != null){
+            applicationThreadM.scheduleCreateService(r);
+        }else {
+            startProcess(processName);
+        }
+    }
+
+
+    @Override
+    public void bindService(IApplicationThreadM applicationThreadM, IntentM intent, IServiceConnectionM connectionM){
+        ServiceRecordM r = new ServiceRecordM();
+        String servName = getComponentName(intent);
+        mServices.put(servName, r);
+
+        String processName = "";
+
+        ProcessRecordM  pre = mProcessMap.get(processName);
+        if(pre != null){
+            applicationThreadM.scheduleBindService(r);
+        }else {
+            startProcess(processName);
+        }
 
     }
+
+    @Override
+    public void publicService(IBinderM token, IBinderM binder) {
+        ServiceRecordM r = null;
+        //getconnection   call connected
+
+    }
+
+
+    @Override
+    public void serviceDoneExecuting(IBinderM binder) {
+
+    }
+
+    @Override
+    public void registerReceiver(IApplicationThreadM applicationThreadM, IBinderM receiver, String action) {
+
+        ProcessRecordM  callerApp = getRecordForAppLocked(applicationThreadM);
+        ReceiverListM  rl = mRegisteredReceivers.get(receiver);
+        if(rl == null){
+            rl = new ReceiverListM();
+            rl.app = callerApp;
+            rl.receiver = receiver;
+            rl.app.receivers.add(rl);
+            mRegisteredReceivers.put(receiver, rl);
+        }
+
+        BroadcastFilterM bf = new BroadcastFilterM(action, rl);
+        mReceiverResolver.put(action, Collections.singletonList(bf));
+
+    }
+
+    @Override
+    public void broadcastIntent(IApplicationThreadM applicationThreadM, String action) {
+
+        List<BroadcastFilterM>  rls = mReceiverResolver.get(action);
+        mParallelBroadcasts.addAll(rls);
+
+    }
+
+    private void scheduleBroadcastsLocked(){
+        while (mParallelBroadcasts.size() > 0) {
+            BroadcastFilterM r = mParallelBroadcasts.remove(0);
+            r.rl.app.thread.scheduleRegisteredReceiver(r.rl.receiver);
+        }
+    }
+
+
+    private void realStartService(ServiceRecordM r, ProcessRecordM app){
+        r.app = app;
+        app.thread.scheduleLaunchActivity(r);
+    }
+
 
 
     public void startProcess(String ProcessName){
@@ -48,6 +148,13 @@ public class ActivityManagerServiceM extends IActivityManagerServiceM {
         }
     }
 
+    private String getComponentName(IntentM  intent){
+        return "";
+    }
+
+    private ProcessRecordM  getRecordForAppLocked(IApplicationThreadM applicationThreadM){
+        return null;
+    }
 
 
 

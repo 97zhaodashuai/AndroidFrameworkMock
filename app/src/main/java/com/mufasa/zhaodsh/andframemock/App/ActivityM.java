@@ -39,4 +39,12 @@ public class ActivityM {
     }
 
 
+    public void registerReceiver(BroadcastReceiverM  receiverM, String action){
+
+
+
+
+    }
+
+
 }
