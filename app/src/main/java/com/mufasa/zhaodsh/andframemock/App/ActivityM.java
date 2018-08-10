@@ -1,5 +1,7 @@
 package com.mufasa.zhaodsh.andframemock.App;
 
+import android.os.Bundle;
+
 import com.mufasa.zhaodsh.andframemock.IntentM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.IActivityManagerServiceM;
 import com.mufasa.zhaodsh.andframemock.Service.IBinderM;
@@ -14,15 +16,31 @@ public class ActivityM {
         mToken = token;
     }
 
-    public void onCreate(){
+    public void onCreate(Bundle instanceState){
         ViewM v = new ViewM();
         setContentView(v);
+    }
+
+    public void onStart(){
+
     }
 
     public void onResume() {
     }
 
     public void onPause(){
+
+    }
+
+    public void onStop(){
+
+    }
+
+    public void onRetoreInstanceState(Bundle state){
+
+    }
+
+    public void onSaveInstanceState(Bundle state){
 
     }
 

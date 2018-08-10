@@ -7,6 +7,8 @@ import java.util.List;
 public class ProcessRecordM {
     public IApplicationThreadM  thread;
     public String ProcessName;
+    public boolean persistent;
+    public int  pid;
 
     public List<ReceiverListM> receivers;
 

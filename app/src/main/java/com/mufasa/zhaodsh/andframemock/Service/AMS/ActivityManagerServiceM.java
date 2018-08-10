@@ -84,7 +84,6 @@ public class ActivityManagerServiceM extends IActivityManagerServiceM {
     public void publicService(IBinderM token, IBinderM binder) {
         ServiceRecordM r = null;
         //getconnection   call connected
-
     }
 
 
@@ -155,6 +154,57 @@ public class ActivityManagerServiceM extends IActivityManagerServiceM {
     private ProcessRecordM  getRecordForAppLocked(IApplicationThreadM applicationThreadM){
         return null;
     }
+
+    private long getCrashTime(ProcessRecordM proc){
+        return 0;
+    }
+
+    public  void handleAppCrash(IApplicationThreadM applicationThreadM){
+        ProcessRecordM proc = getRecordForAppLocked(applicationThreadM);
+        long crashTime = getCrashTime(proc);
+        if(crashTime  != 0 && crashTime + 1000 * 60 < System.currentTimeMillis()){
+            //两次间隔小于60s
+            if(!proc.persistent){
+                mMainStack.handleAppCrash(proc);
+                clearUPApplicationRecord();
+                kill(proc.pid);
+                mMainStack.resumeTopActivitiesLocked();
+            }else{
+                mMainStack.resumeTopActivitiesLocked();
+            }
+        }else{
+            mMainStack.finishTopRunningActivity(proc);
+        }
+
+        showCrashDialog();
+
+        kill(proc.pid);
+
+    }
+
+    private void showCrashDialog(){
+
+    }
+
+    public void handleAppDied(IApplicationThreadM applicationThreadM){
+        ProcessRecordM proc = getRecordForAppLocked(applicationThreadM);
+        clearUPApplicationRecord();
+        mMainStack.handleAppCrash(proc);
+        mMainStack.resumeTopActivitiesLocked();
+    }
+
+
+    public void clearUPApplicationRecord(){
+        mServices.remove(null);
+        mRegisteredReceivers.remove(null);
+    }
+
+    private  void kill(int pid){
+
+    }
+
+
+
 
 
 

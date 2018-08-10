@@ -1,5 +1,7 @@
 package com.mufasa.zhaodsh.andframemock.App;
 
+import android.os.Bundle;
+
 import com.mufasa.zhaodsh.andframemock.IntentM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.ActivityRecordM;
 import com.mufasa.zhaodsh.andframemock.Service.AMS.IActivityManagerServiceM;
@@ -40,8 +42,31 @@ public class ActivityThreadM {
         @Override
         public void schedulePauseActivity(IBinderM binder) {
             ActivityClientRecordM r = mActivities.get(binder);
+
+            if(isPreHoneycomb()){
+                if(r.state == null){
+                    r.state = new Bundle();
+                }
+                r.activty.onSaveInstanceState(r.state);
+            }
             r.activty.onPause();
         }
+
+        @Override
+        public void scheduleStopActivity(IBinderM binder) {
+            ActivityClientRecordM r = mActivities.get(binder);
+            if(r.state == null){
+                r.state = new Bundle();
+            }
+            r.activty.onSaveInstanceState(r.state);
+            r.activty.onStop();
+        }
+
+        private boolean isPreHoneycomb(){
+            return false;  // 3。0以下手机返回true， 后面返回false
+        }
+
+
 
         @Override
         public void scheduleCreateService(IBinderM token) {
@@ -85,7 +110,11 @@ public class ActivityThreadM {
         ActivityM  a = new ActivityM();
         r.activty = a;
         a.attach(r.token);
-        a.onCreate();
+        a.onCreate(r.state);
+        a.onStart();
+
+        a.onRetoreInstanceState(r.state);
+
         handleResumeActivity(r.token);
     }
 

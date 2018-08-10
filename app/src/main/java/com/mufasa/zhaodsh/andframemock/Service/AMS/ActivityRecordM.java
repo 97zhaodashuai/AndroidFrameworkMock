@@ -9,6 +9,17 @@ public class ActivityRecordM {
 
     public ProcessRecordM app;
 
+    public int launchMode;
+
+    public TaskRecordM task;
+
+    public boolean haveState = false;
+
+    public static  int LAUNCH_STANDARD = 0;
+    public static  int LAUNCH_SINGLE_TOP = 1;
+    public static  int LAUNCH_SINGLE_TASK = 2;
+    public static  int LAUNCH_SINGLE_INSTANCE = 3;
+
     public ActivityRecordM() {
         appToken  = new Token(this);
     }
@@ -22,7 +33,10 @@ public class ActivityRecordM {
         public void Token(ActivityRecordM ac){
 
         }
+    }
 
+    public void setTask(TaskRecordM task){
+        this.task = task;
     }
 
     public class IApplicationToken extends IBinderM {
